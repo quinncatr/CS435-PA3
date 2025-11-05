@@ -1,1 +1,4 @@
-init
+Apache Spark is sparkConfig and is already on your machine from PA0.
+Commands:
+start-master.sh
+start-workers.sh
