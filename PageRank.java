@@ -27,7 +27,9 @@ public class PageRank {
         
         //Loop PageRank Iteratons
         for (int i = 0; i < iterations; i++ ) {
-            
+            // find contributions for a page/outgoing links
+
+            // calculate PageRank for page and update corresponding ranks
         }
     }
 }
