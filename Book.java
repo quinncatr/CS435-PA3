@@ -10,22 +10,20 @@ public class Book
 {
     public static class Doc 
     {
-        public final String id;
-        public final String title;
-        public final String body;
+        public final JavaPairRDD<Integer, String> links;
+        public final JavaPairRDD<Integer, String> title;
 
-        public Doc(String id, String title, String body) 
+        public Doc(JavaPairRDD<Integer, String> links, JavaPairRDD<Integer, String> title) 
         {
-            this.id = id;
+            this.links = links;
             this.title = title;
-            this.body = body;
         }
     }
 
-    public static List<Doc> parseAll(BytesWritable bytes) 
+    public static Doc mapPairs(BytesWritable bytes) 
     {
         JavaRDD<String> links = sc.textFile("hdfs://PA3/Demo-Dataset/links-simple-sorted-sample.txt");
-        JavaRDD<String> titles = sc.textFile("hdfs://PA3/Demo-Dataset/titles-sorted-sample.txt");
+        JavaRDD<String> title_txt = sc.textFile("hdfs://PA3/Demo-Dataset/titles-sorted-sample.txt");
         JavaPairRDD<Integer, List<Integer>> pairs = links.mapToPair(s ->
         {
             String[] line = s.split(":");
@@ -36,20 +34,20 @@ public class Book
                 for (String l : line[1].trim().split("\\s+"))
                     ranks.add(Integer.parseInt(l));
 
-            return new Tuple2<>(page, ranks);
+            return new Tuple2<>(page, ranks); // takes the starting pg number as the key and the page ranks as the values
         });
-        // what do we reduce by?
-        
-        return out;
+
+        JavaPairRDD<Integer, String> title = title_txt.zipWithIndex().mapToPair(s -> new Tuple2<>(s._2.intValue() + 1, t._1)); // ._1() getter method
+
+        return new Doc(pairs, title);
     }
 
-    public static String getTitle(){
-        /* Get the title of the wiki article:
-        To find the page title that corresponds to
-        integer n, just look up the n-th line in the file
-        titles-sorted.txt */
-
+    public static JavaPairRDD<Integer, String> getTitle(){
         return title;
+    }
+
+    public static JavaPairRDD<Integer, String> getLinks(){
+        return links;
     }
 
 }
