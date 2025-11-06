@@ -3,3 +3,14 @@ Commands:
 start-master.sh
 start-workers.sh
 stop-all.sh
+
+Git Commands:
+Committing:
+git add .
+git commit -m “message”
+git push (remote repository) (branch name)
+Origin is the shorthand 
+
+Switch Branches:
+git fetch origin
+git checkout 3-add-dataset
