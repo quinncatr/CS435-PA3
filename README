@@ -9,7 +9,8 @@ Committing:
 git add .
 git commit -m “message”
 git push (remote repository) (branch name)
-Origin is the shorthand 
+origin is the shorthand 
+ex: git push origin main (if pushing to main branch)
 
 Switch Branches:
 git fetch origin
