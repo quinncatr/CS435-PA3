@@ -1,4 +1,4 @@
-package tfidf;
+//package ;
 
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -10,119 +10,45 @@ public class Book
 {
     public static class Doc 
     {
-        public final String id;
-        public final String title;
-        public final String body;
+        public final JavaPairRDD<Integer, String> links;
+        public final JavaPairRDD<Integer, String> title;
 
-        public Doc(String id, String title, String body) 
+        public Doc(JavaPairRDD<Integer, String> links, JavaPairRDD<Integer, String> title) 
         {
-            this.id = id;
+            this.links = links;
             this.title = title;
-            this.body = body;
         }
     }
 
-    private static final Pattern HEADER_SPLIT =
-        Pattern.compile("(?m)^([^\\n<]+)\\s*<====>\\s*(\\d+)\\s*<====>\\s*", Pattern.MULTILINE);
-
-    public static List<Doc> parseAll(BytesWritable bytes) 
+    public static Doc mapPairs()
     {
-        String all = new String(bytes.copyBytes(), StandardCharsets.UTF_8);
-        Matcher m = HEADER_SPLIT.matcher(all);
-        List<Doc> out = new ArrayList<>();
-        int start = -1;
-        String title = null;
-        String id = null;
-
-        while(m.find()) 
+        JavaRDD<String> links = sc.textFile("hdfs://PA3/Demo-Dataset/links-simple-sorted-sample.txt");
+        JavaRDD<String> title_txt = sc.textFile("hdfs://PA3/Demo-Dataset/titles-sorted-sample.txt");
+        JavaPairRDD<Integer, List<Integer>> pairs = links.mapToPair(s ->
         {
-            if(id != null && start >= 0) 
-            {
-                String prevBody = all.substring(start, m.start());
-                out.add(new Doc(id, title, prevBody));
-            }
+            String[] line = s.split(":");
+            int page = Integer.parseInt(line[0].trim());
+            List<Integer> ranks = new ArrayList<>();
 
-            title = m.group(1).trim();
-            id = m.group(2).trim();
-            start = m.end();
-        }
+            if (line.length > 1 && !line[1].trim().isEmpty())
+                for (String l : line[1].trim().split("\\s+"))
+                    ranks.add(Integer.parseInt(l));
 
-        if(id != null && start >= 0) 
-        {
-            String body = all.substring(start);
-            out.add(new Doc(id, title, body));
-        }
+            return new Tuple2<>(page, ranks); // takes the starting pg number as the key and the page ranks as the values
+        });
 
-        return out;
+        // The value pair is the line number as the kay and the title as the value, this means the keys match for pairs (above) and title (below)
+        JavaPairRDD<Integer, String> title = title_txt.zipWithIndex().mapToPair(s -> new Tuple2<>(s._2.intValue() + 1, t._1)); // ._1() getter method
+
+        return new Doc(pairs, title);
     }
 
-    public static boolean keepWord(String tok) 
-    {
-        if(tok == null) 
-        {
-            return false;
-        }
-
-        if(tok.isEmpty()) 
-        {
-            return false;
-        }
-
-        if(!tok.matches(".*[a-z].*")) 
-        {
-            return false;
-        }
-
-        if(tok.matches("\\d+(?:-\\d+)*")) 
-        {
-            return false;
-        }
-
-        if(tok.length() > 40) 
-        {
-            return false;
-        }
-
-        if(tok.matches("[acgt]{20,}")) 
-        {
-            return false;
-        }
-
-        return true;
+    public static JavaPairRDD<Integer, String> getTitle(){
+        return title;
     }
 
-    public static String normalizeUnigrams(String s) 
-    {
-        String x = s.toLowerCase();
-        x = x.replace("'", "");
-        x = x.replaceAll("-{2,}", " ");                    
-        x = x.replaceAll("-(?![a-z])|(?<![a-z])-", " ");   
-        x = x.replaceAll("[^a-z0-9\\-\\s]", " ");          
-        x = x.replaceAll("\\s+", " ").trim();
-        return x;
-    }
-
-    public static java.util.List<String> getUnigram(String body)
-    {
-        String norm = normalizeUnigrams(body);
-        List<String> unigramLst = new ArrayList<>();
-
-        if(!norm.isEmpty()) 
-        {
-            String[] splt = norm.split("\\s+");
-
-            for(String t : splt) 
-            {
-                boolean keep = keepWord(t);
-
-                if(keep) 
-                {
-                    unigramLst.add(t);
-                }
-            }
-        }
-
-        return unigramLst;
+    public static JavaPairRDD<Integer, String> getLinks(){
+        return links;
     }
 
 }
