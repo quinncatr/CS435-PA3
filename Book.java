@@ -20,7 +20,7 @@ public class Book
         }
     }
 
-    public static Doc mapPairs(BytesWritable bytes) 
+    public static Doc mapPairs()
     {
         JavaRDD<String> links = sc.textFile("hdfs://PA3/Demo-Dataset/links-simple-sorted-sample.txt");
         JavaRDD<String> title_txt = sc.textFile("hdfs://PA3/Demo-Dataset/titles-sorted-sample.txt");
