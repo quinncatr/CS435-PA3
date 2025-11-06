@@ -37,6 +37,7 @@ public class Book
             return new Tuple2<>(page, ranks); // takes the starting pg number as the key and the page ranks as the values
         });
 
+        // The value pair is the line number as the kay and the title as the value, this means the keys match for pairs (above) and title (below)
         JavaPairRDD<Integer, String> title = title_txt.zipWithIndex().mapToPair(s -> new Tuple2<>(s._2.intValue() + 1, t._1)); // ._1() getter method
 
         return new Doc(pairs, title);
