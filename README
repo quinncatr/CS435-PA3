@@ -19,4 +19,12 @@ git checkout 3-add-dataset
 Hadoop run commands(I put all the .java files in a folder named pagerank):
 javac -cp "$(hadoop classpath):$SPARK_HOME/jars/*:." pagerank/*
 jar -cvf PageRank.jar pagerank
-spark-submit --class pagerank.PageRank --master yarn PageRank.jar hdfs:///PA3/Demo-Dataset/links-simple-sorted-sample.txt hdfs:///PA3/Demo-Dataset/titles-sorted-sample.txt /PA3/output-pagerank
+JOB COMMAND:
+spark-submit \
+  --class pagerank.PageRank \
+  --master yarn \
+  PageRank.jar \
+  hdfs:///PA3/Demo-Dataset/links-simple-sorted-sample.txt \
+  hdfs:///PA3/Demo-Dataset/titles-sorted-sample.txt \
+  /PA3/output-ideal \
+  /PA3/output-taxed
