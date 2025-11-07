@@ -23,18 +23,20 @@ public class PageRank
         for(int i = 0; i < iterations; i++) 
         {
             JavaPairRDD<Integer, Double> value = links.join(ranks).flatMapToPair(t -> {
-                List<Integer> links2 = t._2._1;
-                double rank = t._2._2;
+                List<Integer> outlinks = t._2._1; //pages this page links to
+                double rank = t._2._2; //current rank of page
                 List<Tuple2<Integer, Double>> out = new ArrayList<>();
 
-                if(links2.isEmpty()) 
+                //if page has no outgoing links i.e. deadend
+                if(outlinks.isEmpty()) 
                 {
                     out.add(new Tuple2<>(-1, rank));
                     return out.iterator();
                 }
 
-                double share = rank / links2.size();
-                for(int temp : links2) 
+                //divide the pagerank equally among its outlinks
+                double share = rank / outlinks.size();
+                for(int temp : outlinks) 
                 {
                     out.add(new Tuple2<>(temp, share));
                 }
@@ -43,22 +45,25 @@ public class PageRank
 
             if(!taxation)
             {
+                //sum all contributions for each page & do not include dead ends
                 ranks = value.filter(t -> t._1 != -1).reduceByKey(Double::sum);
             } 
             else
             {
-                //taxation
+                //taxation (beta)
                 double beta = damping;
 
+                //total rank or deadmass trapped in deadend pages
                 double deadMass = value.filter(t -> t._1 == -1).values().fold(0.0, Double::sum);
 
                 JavaPairRDD<Integer, Double> sum2 = value.filter(t -> t._1 != -1).reduceByKey(Double::sum);
 
                 final double teleport = (1.0 - beta) / N;
-                final double spreadDead = deadMass / N;
+                final double redistribution = deadMass / N;
 
-                ranks = sum2.mapValues(sum -> (beta * sum) + teleport + (beta * spreadDead)).union(links.keys().subtract(sum2.keys())
-                              .mapToPair(k -> new Tuple2<>(k, teleport + (beta * spreadDead))));
+                //combines values from linked pages, teleportation, and deadend redistribution.
+                ranks = sum2.mapValues(sum -> (beta * sum) + teleport + (beta * redistribution)).union(links.keys().subtract(sum2.keys())
+                              .mapToPair(k -> new Tuple2<>(k, teleport + (beta * redistribution))));
             }
         }
 
