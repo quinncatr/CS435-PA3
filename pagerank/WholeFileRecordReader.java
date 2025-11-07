@@ -1,4 +1,4 @@
-package tfidf; //needs to be changed to reflect our project
+package pagerank; //needs to be changed to reflect our project
 
 //figure out if there is Spark versions of these import statements
 import java.io.IOException;
